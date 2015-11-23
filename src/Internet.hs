@@ -23,13 +23,18 @@ along with Aura.  If not, see <http://www.gnu.org/licenses/>.
 
 module Internet
     ( urlContents
-    , saveUrlContents ) where
+    , saveUrlContents
+    , gitClone ) where
 
 import           Control.Lens
 import qualified Data.ByteString.Lazy as L
+import           Data.Maybe (maybeToList)
 import           Network.Wreq
 import           System.FilePath (splitFileName, (</>))
+import           System.Exit (ExitCode)
 import           System.IO (hClose, openFile, IOMode(WriteMode))
+
+import           Shell
 
 ---
 
@@ -46,3 +51,16 @@ saveUrlContents fpath url = do
       L.hPutStr handle c *> hClose handle *> pure (Just filePath)
           where filePath = fpath </> file
                 (_, file) = splitFileName url
+
+-- | Clone a Git repository by calling the @git@ executable
+--
+-- This probably fits better into the "Shell" module, but might be
+-- superseded by a native solution, at which point it would belong here
+-- again.
+gitClone :: String -- ^ URL to clone from
+         -> Maybe FilePath -- ^ Filepath to explicitly clone to
+         -> IO ExitCode -- ^ @git clone@'s exit code
+gitClone url fp = do
+    (exitCode, _, _) <- quietShellCmd' "git" $ 
+        ["clone", "--", url] ++ maybeToList fp
+    return exitCode

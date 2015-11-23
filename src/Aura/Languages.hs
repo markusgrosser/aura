@@ -866,6 +866,11 @@ downloadTarballs_1 (bt -> p) = \case
     Indonesia  -> "Mengunduh tarbal untuk paket " <> p <> "..."
     _          -> "Downloading " <> p <> " source tarball..."
 
+cloneSource_1 :: String -> Language -> String
+cloneSource_1 (bt -> p) = \case
+    German -> "Klone Quelltext (git) von " <> p <> " ..."
+    _      -> "Cloning " <> p <> " sources (git) ..."
+
 displayPkgbuild_1 :: String -> Language -> String
 displayPkgbuild_1 (bt -> p) = \case
     Japanese   -> p <> "は存在しない。"

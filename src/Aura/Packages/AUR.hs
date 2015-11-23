@@ -30,6 +30,7 @@ module Aura.Packages.AUR
     , aurInfo
     , aurSearch
     , pkgUrl
+    , gitUrl
     ) where
 
 import           Control.Monad        ((>=>), join)
@@ -40,13 +41,13 @@ import           Data.Maybe
 import qualified Data.Text            as T
 import           Linux.Arch.Aur
 import           System.FilePath      ((</>))
+import           System.Exit          (ExitCode(..))
 
 import           Aura.Monad.Aura
 import           Aura.Pkgbuild.Base
 import           Aura.Settings.Base
 import           Aura.Core
 
-import           Utilities            (decompress)
 import           Internet
 
 ---
@@ -62,8 +63,13 @@ makeBuildable name pb = Buildable
     { baseNameOf   = name
     , pkgbuildOf   = pb
     , isExplicit   = False
-    , buildScripts = f }
-    where f fp = sourceTarball fp (T.pack name) >>= traverse decompress
+    , buildScripts = clone }
+  where
+    clone fp = do
+        exitCode <- gitClone (gitUrl name) $ Just fp
+        return $ case exitCode of
+            ExitSuccess -> Just fp
+            _ -> Nothing
 
 isAurPackage :: String -> Aura Bool
 isAurPackage name = isJust <$> pkgbuild name
@@ -76,6 +82,9 @@ aurLink = "https://aur.archlinux.org"
 
 pkgUrl :: String -> String
 pkgUrl pkg = aurLink </> "packages" </> pkg
+
+gitUrl :: String -> String
+gitUrl pkg = aurLink </> pkg <> ".git"
 
 ------------------
 -- SOURCE TARBALLS

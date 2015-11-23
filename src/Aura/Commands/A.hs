@@ -31,7 +31,7 @@ module Aura.Commands.A
     , aurPkgInfo
     , aurPkgSearch
     , displayPkgDeps
-    , downloadTarballs
+    , cloneSource
     , displayPkgbuild ) where
 
 import           Control.Monad
@@ -59,7 +59,7 @@ import           Aura.Bash (namespace, Namespace)
 import           Aura.Core
 import           Aura.Utils.Numbers
 
-import           Shell
+import           Internet (gitClone)
 import           Utilities (whenM)
 
 ---
@@ -174,13 +174,16 @@ displayPkgDeps ps = do
     opts <- installOptions
     I.displayPkgDeps opts ps
 
-downloadTarballs :: [String] -> Aura ()
-downloadTarballs pkgs = do
-  currDir <- liftIO pwd
-  traverse_ (downloadTBall currDir) pkgs
-    where downloadTBall path pkg = whenM (isAurPackage pkg) $ do
-              notify $ downloadTarballs_1 pkg
-              void . liftIO $ sourceTarball path $ T.pack pkg
+-- | Clone several AUR packages' PKGBUILD, .SRCINFO and other files from
+-- the AUR
+--
+-- Handles split packages, albeit in a not very elegant way
+cloneSource :: [String] -> Aura ()
+cloneSource pkgs = traverse_ clone pkgs
+  where
+    clone pkg = whenM (isAurPackage pkg) $ do
+        notify $ cloneSource_1 pkg
+        void $ liftIO $ gitClone (gitUrl pkg) Nothing
 
 displayPkgbuild :: [String] -> Aura ()
 displayPkgbuild = I.displayPkgbuild (traverse (fmap (fmap T.unpack) . pkgbuild))

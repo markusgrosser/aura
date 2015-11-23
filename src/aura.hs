@@ -106,7 +106,7 @@ executeOpts (flags, input, pacOpts) =
           [Info]         -> A.aurPkgInfo input
           [Search]       -> A.aurPkgSearch input
           [ViewDeps]     -> A.displayPkgDeps input
-          [Download]     -> A.downloadTarballs input
+          [Download]     -> A.cloneSource input
           [GetPkgbuild]  -> A.displayPkgbuild input
           (Refresh:fs')  -> sudo $ syncAndContinue (fs', input, pacOpts)
           _              -> scoldAndFail executeOpts_1
